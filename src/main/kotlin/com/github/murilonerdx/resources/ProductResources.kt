@@ -6,15 +6,7 @@ import com.github.murilonerdx.ProductsServiceServiceGrpc
 import io.grpc.stub.StreamObserver
 
 class ProductResources: ProductsServiceServiceGrpc.ProductsServiceServiceImplBase(){
-    override fun send(request: ProductsServiceRequest?, responseObserver: StreamObserver<ProductsServiceReply>?) {
-        val toSend = "Hello, ${request?.name}"
-
-
-        val reply = ProductsServiceReply.newBuilder()
-            .setMessage(toSend)
-            .build()
-
-        responseObserver?.onNext(reply);
-        responseObserver?.onCompleted();
+    override fun create(request: ProductsServiceRequest?, responseObserver: StreamObserver<ProductsServiceReply>?) {
+        super.create(request, responseObserver)
     }
 }

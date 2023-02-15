@@ -2,28 +2,43 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 option java_package = "com.github.murilonerdx";
-option java_outer_classname = "ProductsService";
-option objc_class_prefix = "HLW";
 
-package com.github.murilonerdx;
+package br.com.tony;
 
-service ProductsServiceService {
-  rpc Create (ProductsServiceRequest) returns (ProductsServiceReply){}
+service ProductsService {
+  rpc Create (ProductServiceRequest) returns (ProductServiceResponse) {}
+  rpc FindById (RequestById) returns (ProductServiceResponse) {}
+  rpc Update (ProductServiceUpdateRequest) returns (ProductServiceResponse) {}
+  rpc Delete (RequestById) returns (Empty) {}
+  rpc FindAll (Empty) returns (ProductsList) {}
 }
 
-enum STATUS{
-  OK = 0;
+message Empty {}
+
+message ProductsList {
+  repeated ProductServiceResponse products = 1;
 }
 
-message ProductsServiceRequest {
+message RequestById {
+  int64 id = 1;
+}
+
+message ProductServiceRequest {
   string name = 1;
   double price = 2;
   int32 quantity_in_stock = 3;
 }
 
-message ProductsServiceReply {
+message ProductServiceResponse {
   int64 id = 1;
-  string name=2;
+  string name = 2;
+  double price = 3;
+  int32 quantity_in_stock = 4;
+}
+
+message ProductServiceUpdateRequest {
+  int64 id = 1;
+  string name = 2;
   double price = 3;
   int32 quantity_in_stock = 4;
 }

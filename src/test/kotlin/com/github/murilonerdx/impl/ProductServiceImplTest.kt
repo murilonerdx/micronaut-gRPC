@@ -2,27 +2,153 @@ package com.github.murilonerdx.impl
 
 import com.github.murilonerdx.domain.Product
 import com.github.murilonerdx.dto.ProductReq
+import com.github.murilonerdx.dto.ProductRes
+import com.github.murilonerdx.dto.ProductUpdateReq
+import com.github.murilonerdx.exception.AlreadyExistsException
+import com.github.murilonerdx.exception.ProductNotFoundException
 import com.github.murilonerdx.repository.ProductRepository
 import com.github.murilonerdx.service.ProductServiceImpl
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import java.util.*
 
 internal class ProductServiceImplTest {
     private val productRepository = Mockito.mock(ProductRepository::class.java)
     private val productService = ProductServiceImpl(productRepository)
 
-
     @Test
-    fun `when create method is call with valid data a ProductRes is returned`(){
-        val product = Product(id=null, name="product name", price = 10.00, quantityInStock=5)
-        val productOutput = Product(id=1, name="product name", price = 10.00, quantityInStock=5)
+    fun `when create method is call with valid data a ProductRes is returned`() {
+        val productInput = Product(id = null, name = "product name", price = 10.00, quantityInStock = 5)
+        val productOutput = Product(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
 
-        Mockito.`when`(productRepository.save(product)).thenReturn(productOutput)
+        `when`(productRepository.save(productInput))
+            .thenReturn(productOutput)
 
-        val productReq = ProductReq(name="product name", price = 10.00, quantityInStock = 5)
+        val productReq = ProductReq(name = "product name", price = 10.00, quantityInStock = 5)
+
         val productRes = productService.create(productReq)
 
-        assertEquals(productRes.name, productReq.name)
+        assertEquals(productReq.name, productRes.name)
+    }
+
+    @Test
+    fun `when create method is call with duplicated product-name, throws AlreadyExistsException`() {
+        val productInput = Product(id = null, name = "product name", price = 10.00, quantityInStock = 5)
+        val productOutput = Product(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+
+        `when`(productRepository.findByNameIgnoreCase(productInput.name))
+            .thenReturn(productOutput)
+
+        val productReq = ProductReq(name = "product name", price = 10.00, quantityInStock = 5)
+
+        assertThrowsExactly(AlreadyExistsException::class.java) { productService.create(productReq) }
+    }
+
+    @Test
+    fun `when findById method is call with valid id a ProductRes is returned`() {
+        val productInput = 1L
+        val productOutput = Product(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+
+        `when`(productRepository.findById(productInput))
+            .thenReturn(Optional.of(productOutput))
+
+        val productRes = productService.findById(productInput)
+
+        assertEquals(productInput, productRes.id)
+        assertEquals(productOutput.name, productRes.name)
+    }
+
+    @Test
+    fun `when findById method is call with invalid id, throws ProductNotFoundException`() {
+        val id = 1L
+        assertThrowsExactly(ProductNotFoundException::class.java) { productService.findById(id) }
+    }
+
+    @Test
+    fun `when update method is call with duplicated product-name, throws AlreadyExistsException`() {
+        val productInput = Product(id = null, name = "product name", price = 10.00, quantityInStock = 5)
+        val productOutput = Product(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+
+        `when`(productRepository.findByNameIgnoreCase(productInput.name))
+            .thenReturn(productOutput)
+
+        val productReq = ProductUpdateReq(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+
+        assertThrowsExactly(AlreadyExistsException::class.java) { productService.update(productReq) }
+    }
+
+    @Test
+    fun `when update method is call with invalid id, throws ProductNotFoundException`() {
+        val productReq = ProductUpdateReq(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+        assertThrowsExactly(ProductNotFoundException::class.java) { productService.update(productReq) }
+    }
+
+    @Test
+    fun `when update method is call with valid data a ProductRes is returned`() {
+        val productInput = Product(id = 1, name = "updated product", price = 11.00, quantityInStock = 10)
+        val findByIdOutput = Product(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+
+        `when`(productRepository.findById(productInput.id!!))
+            .thenReturn(Optional.of(findByIdOutput))
+
+        `when`(productRepository.update(productInput))
+            .thenReturn(productInput)
+
+        val productReq = ProductUpdateReq(id = 1, name = "updated product", price = 11.00, quantityInStock = 10)
+
+        val productRes = productService.update(productReq)
+
+        assertEquals(productReq.name, productRes.name)
+    }
+
+    @Test
+    fun `when delete method is call with valid id the product is deleted`() {
+        val id = 1L
+        val productOutput = Product(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+
+        `when`(productRepository.findById(id))
+            .thenReturn(Optional.of(productOutput))
+
+        assertDoesNotThrow { productService.delete(id) }
+    }
+
+    @Test
+    fun `when delete method is call with invalid id, throws ProductNotFoundException `() {
+        val id = 1L
+
+        `when`(productRepository.findById(id))
+            .thenReturn(Optional.empty())
+
+        assertThrowsExactly(ProductNotFoundException::class.java) {
+            productService.delete(id)
+        }
+    }
+
+    @Test
+    fun `when findAll method is call a list of ProductRes is returned`() {
+        val productsList = listOf(
+            Product(id = 1, name = "product name", price = 10.00, quantityInStock = 5)
+        )
+
+        `when`(productRepository.findAll())
+            .thenReturn(productsList)
+
+        val productRes = productService.findAll()
+
+        assertEquals(productsList[0].name, productRes[0].name)
+    }
+
+    @Test
+    fun `when findAll method is call without products a emptyList of ProductRes is returned`() {
+        val productsList = emptyList<ProductRes>()
+
+        `when`(productRepository.findAll())
+            .thenReturn(emptyList())
+
+        val productRes = productService.findAll()
+
+        assertEquals(productsList.size, productRes.size)
     }
 }

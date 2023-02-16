@@ -1,4 +1,4 @@
-package com.github.murilonerdx
+package com.github.murilonerdx.impl
 
 import com.github.murilonerdx.domain.Product
 import com.github.murilonerdx.dto.ProductReq

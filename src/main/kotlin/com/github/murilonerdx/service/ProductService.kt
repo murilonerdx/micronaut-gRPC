@@ -6,4 +6,5 @@ import io.micronaut.grpc.annotation.GrpcService
 
 interface ProductService {
     fun create(req: ProductReq): ProductRes
+    fun findById(id: Long): ProductRes
 }

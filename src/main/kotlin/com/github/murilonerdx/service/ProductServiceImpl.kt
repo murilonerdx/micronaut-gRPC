@@ -3,6 +3,7 @@ package com.github.murilonerdx.service
 import com.github.murilonerdx.domain.Product
 import com.github.murilonerdx.dto.ProductReq
 import com.github.murilonerdx.dto.ProductRes
+import com.github.murilonerdx.exception.ProductNotFoundException
 import com.github.murilonerdx.repository.ProductRepository
 import com.github.murilonerdx.util.toDomain
 import com.github.murilonerdx.util.toProductRes
@@ -13,5 +14,11 @@ class ProductServiceImpl(private val productRepository:ProductRepository) : Prod
     override fun create(req: ProductReq): ProductRes {
         val productSaved =  productRepository.save(req.toDomain())
         return productSaved.toProductRes()
+    }
+
+    override fun findById(id: Long): ProductRes {
+        val findById = productRepository.findById(id)
+        findById.orElseThrow { ProductNotFoundException(id) }
+        return findById.get().toProductRes()
     }
 }

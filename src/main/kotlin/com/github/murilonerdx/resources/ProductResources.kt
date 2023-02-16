@@ -3,6 +3,7 @@ package com.github.murilonerdx.resources
 import com.github.murilonerdx.ProductServiceRequest
 import com.github.murilonerdx.ProductServiceResponse
 import com.github.murilonerdx.ProductsServiceGrpc
+import com.github.murilonerdx.RequestById
 import com.github.murilonerdx.dto.ProductReq
 import com.github.murilonerdx.service.ProductService
 import com.github.murilonerdx.util.ValidationUtil
@@ -17,6 +18,19 @@ class ProductResources(private val productService: ProductService) : ProductsSer
             ProductReq(name = payload.name, price = payload.price, quantityInStock = payload.quantityInStock)
         val productRes = productService.create(productReq)
 
+        val productResponse = ProductServiceResponse.newBuilder()
+            .setId(productRes.id)
+            .setName(productRes.name)
+            .setPrice(productRes.price)
+            .setQuantityInStock(productRes.quantityInStock)
+            .build()
+
+        responseObserver?.onNext(productResponse)
+        responseObserver?.onCompleted()
+    }
+
+    override fun findById(request: RequestById?, responseObserver: StreamObserver<ProductServiceResponse>?) {
+        val productRes = productService.findById(request!!.id)
         val productResponse = ProductServiceResponse.newBuilder()
             .setId(productRes.id)
             .setName(productRes.name)

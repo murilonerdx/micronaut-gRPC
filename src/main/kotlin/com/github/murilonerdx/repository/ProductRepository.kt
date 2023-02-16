@@ -6,4 +6,6 @@ import io.micronaut.data.jpa.repository.JpaRepository
 import jakarta.inject.Singleton
 
 @Repository
-interface ProductRepository : JpaRepository<Product, Long>{}
+interface ProductRepository : JpaRepository<Product, Long> {
+    fun findByNameIgnoreCase(name: String): Product?
+}

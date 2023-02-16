@@ -1,10 +1,8 @@
 package com.github.murilonerdx.resources
 
-import com.github.murilonerdx.ProductServiceRequest
-import com.github.murilonerdx.ProductServiceResponse
-import com.github.murilonerdx.ProductsServiceGrpc
-import com.github.murilonerdx.RequestById
+import com.github.murilonerdx.*
 import com.github.murilonerdx.dto.ProductReq
+import com.github.murilonerdx.dto.ProductUpdateReq
 import com.github.murilonerdx.service.ProductService
 import com.github.murilonerdx.util.ValidationUtil
 import io.grpc.stub.StreamObserver
@@ -39,6 +37,57 @@ class ProductResources(private val productService: ProductService) : ProductsSer
             .build()
 
         responseObserver?.onNext(productResponse)
+        responseObserver?.onCompleted()
+    }
+
+    override fun update(
+        request: ProductServiceUpdateRequest?,
+        responseObserver: StreamObserver<ProductServiceResponse>?
+    ) {
+        val payload = ValidationUtil.validateUpdatePayload(request)
+
+        val productReq = ProductUpdateReq(
+            id = payload.id,
+            name = payload.name,
+            price = payload.price,
+            quantityInStock = payload.quantityInStock
+        )
+
+        val productRes = productService.update(productReq)
+
+        val productResponse = ProductServiceResponse.newBuilder()
+            .setId(productRes.id)
+            .setName(productRes.name)
+            .setPrice(productRes.price)
+            .setQuantityInStock(productRes.quantityInStock)
+            .build()
+
+        responseObserver?.onNext(productResponse)
+        responseObserver?.onCompleted()
+    }
+
+    override fun delete(request: RequestById?, responseObserver: StreamObserver<Empty>?) {
+        productService.delete(request!!.id)
+        responseObserver?.onNext(Empty.newBuilder().build())
+        responseObserver?.onCompleted()
+    }
+
+    override fun findAll(request: Empty?, responseObserver: StreamObserver<ProductsList>?) {
+        val productResList = productService.findAll()
+        val productServiceResponseList = productResList.map {
+            ProductServiceResponse.newBuilder()
+                .setId(it.id)
+                .setName(it.name)
+                .setPrice(it.price)
+                .setQuantityInStock(it.quantityInStock)
+                .build()
+        }
+
+        val response = ProductsList.newBuilder()
+            .addAllProducts(productServiceResponseList)
+            .build()
+
+        responseObserver?.onNext(response)
         responseObserver?.onCompleted()
     }
 }
